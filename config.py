@@ -1,0 +1,4 @@
+EPOCHS:int = 100
+LEARNING_RATE:float = 1e-4
+DISCRIMINATOR_WEIGHT:float = 1e-3
+

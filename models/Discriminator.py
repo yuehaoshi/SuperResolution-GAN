@@ -1,7 +1,7 @@
-from tensorflow.keras import Model, layers, activations
+from tensorflow.keras import layers, activations
 
 
-class Discriminator(Model):
+class Discriminator(layers.Layer):
     def __init__(self) -> None:
         super().__init__()
         self.prelu = layers.PReLU()

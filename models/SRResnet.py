@@ -31,7 +31,7 @@ class SubPixConv2D(layers.Layer):
         self.conv1 = layers.Conv2D(64*scale*2, 3)
         self.prelu = layers.PReLU()
 
-    def forward(self, x: Tensor):
+    def call(self, x: Tensor):
         y = self.conv1(x)
         y = tf.nn.depth_to_space(y, self.scale)
         y = self.prelu(y)
