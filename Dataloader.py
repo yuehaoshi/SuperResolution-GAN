@@ -1,38 +1,48 @@
-import tensorflow as tf
-import pathlib
 import os
-import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
+from PIL import Image
 
 
-# Read the data using the tf.io.read_file function and extract the label from the path, returning (image, label) pairs
-np.set_printoptions(precision=4)
+#adapted from https://github.com/krasserm/super-resolution/blob/master/data.py
 
-flowers_root = tf.keras.utils.get_file(
-    #Take 'flower_photos' as an example. Reference: https://www.tensorflow.org/guide/data
-    'flower_photos',
-    'https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz',
-    untar=True)
-flowers_root = pathlib.Path(flowers_root)
+class DIV2KDataset:
+    def __init__(self, path, subset='train', image_ids=None, cache_images=True):
+        self.path = path
+        self.subset = subset
+        self.cache_images = cache_images
+        self.cache = {}
 
-for item in flowers_root.glob("*"):
-    print(item.name)
+        if image_ids is None:
+            if subset == 'train':
+                self.image_ids = range(1, 801)
+            else:
+                self.image_ids = range(801, 901)
+        else:
+            self.image_ids = image_ids
 
-list_ds = tf.data.Dataset.list_files(str(flowers_root/'*/*'))
+    def __len__(self):
+        return len(self.image_ids)
 
-for f in list_ds.take(5):
-    print(f.numpy())
+    def pair_generator(self, downgrade='bicubic', scale=2, repeat=True):
+        while True:
+            for id in self.image_ids:
+                hr_path = os.path.join(self.path, f'DIV2K_{self.subset}_HR', f'{id:04}.png')
+                lr_path = os.path.join(self.path, f'DIV2K_{self.subset}_LR_{downgrade}', f'X{scale}', f'{id:04}x{scale}.png')
 
+                hr_img = self._image(hr_path)
+                lr_img = self._image(lr_path)
 
-def process_path(file_path):
-    label = tf.strings.split(file_path, os.sep)[-2]
-    return tf.io.read_file(file_path), label
+                yield lr_img, hr_img
 
+            if not repeat:
+                break
 
-labeled_ds = list_ds.map(process_path)
-
-for image_raw, label_text in labeled_ds.take(1):
-    print(repr(image_raw.numpy()[:100]))
-    print()
-    print(label_text.numpy())
+    def _image(self, path):
+        img = self.cache.get(path)
+        if not img:
+            img = Image.open(path)
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            if self.cache_images:
+                self.cache[path] = img
+        return img
