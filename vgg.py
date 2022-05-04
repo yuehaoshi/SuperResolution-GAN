@@ -1,9 +1,5 @@
-import enum
-import os
 
 import numpy as np
-from sqlalchemy import true
-
 
 #pip3 install tensorlayerx to install
 import tensorlayerx as tlx
@@ -13,14 +9,6 @@ from tensorlayerx.nn import Module
 from tensorlayerx.nn import (BatchNorm, Conv2d, Linear, Flatten, Input, Sequential, MaxPool2d)
 # from tensorflow import Module, Variable, Tensor
 # from tensorflow.keras import layers, activations, Model
-
-__all__ = [
-    'VGG',
-    'vgg16',
-    'vgg19',
-    'VGG16',
-    'VGG19',
-]
 
 layer_names = [
     ['conv1_1', 'conv1_2'], 'pool1', ['conv2_1', 'conv2_2'], 'pool2',
@@ -97,29 +85,7 @@ def make_layers(config, batch_norm=False, end_with='outputs'):
 
 
 def vgg19(pretrained=False, end_with='outputs', mode='dynamic', name=None):
-    """Pre-trained VGG19 model.
-    Parameters
-    ------------
-    pretrained : boolean
-        Whether to load pretrained weights. Default False.
-    end_with : str
-        The end point of the model. Default ``fc3_relu`` i.e. the whole model.
-    mode : str.
-        Model building mode, 'dynamic' or 'static'. Default 'dynamic'.
-    name : None or str
-        A unique layer name.
-    Examples
-    ---------
-    Classify ImageNet classes with VGG19, see `tutorial_models_vgg.py <https://github.com/tensorlayer/TensorLayerX/blob/main/examples/model_zoo/vgg.py>`__
-    With TensorLayerx
-    >>> # get the whole model, without pre-trained VGG parameters
-    >>> vgg = vgg19()
-    >>> # get the whole model, restore pre-trained VGG parameters
-    >>> vgg = vgg19(pretrained=True)
-    >>> # use for inferencing
-    >>> output = vgg(img)
-    >>> probs = tlx.ops.softmax(output)[0].numpy()
-    """
+
     if mode == 'dynamic':
         model = VGG19(batch_norm=False, end_with=end_with, name=name)
     elif mode == 'static':
