@@ -1,4 +1,5 @@
 EPOCHS:int = 100
 LEARNING_RATE:float = 1e-4
 DISCRIMINATOR_WEIGHT:float = 1e-3
-
+DIV2K_PATH = "./div2k/"
+BATCH_SIZE=8

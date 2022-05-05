@@ -19,7 +19,6 @@ class Discriminator(layers.Layer):
         self.flat = layers.Flatten()
         self.dense1 = layers.Dense(512, activation=layers.LeakyReLU(alpha=0.18))
         self.dense2 = layers.Dense(1)
-        self.sigmoid = activations.sigmoid()
     
     def forward(self,x):
         x = self.conv1(x)
@@ -37,6 +36,6 @@ class Discriminator(layers.Layer):
         x = self.dense1(x)
         x = self.dense2(x)
         result = x
-        x = self.sigmoid(x)
+        x = activations.sigmoid(x)
         return x, result
 

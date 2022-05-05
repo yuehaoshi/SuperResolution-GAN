@@ -1,10 +1,10 @@
 import tensorflow as tf
-from Discriminator import Discriminator
+from models.Discriminator import Discriminator
 import config
 from models.SRResnet import SRResnet
 from tensorflow import losses, Tensor
 from tensorflow.keras import Model
-import Dataloader
+from Dataloader import DIV2KDataset
 from tqdm import tqdm
 
 
@@ -31,10 +31,16 @@ def train_mse():
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
     model = SRResnet(B=16)
     discriminator = Discriminator()
-
+    dataset = DIV2KDataset(config.DIV2K_PATH, 'train')
+    train_data = tf.data.Dataset.from_generator(
+        dataset.pair_generator,
+        output_signature=(tf.TensorSpec((None, None, 3)), tf.TensorSpec((None, None, 3))))
+    train_data = train_data.batch(config.BATCH_SIZE)
     for ep in tqdm(range(config.EPOCHS)):
-        for step, (X_train, y_train) in enumerate(Dataloader):
 
+        for step, (X_train, y_train) in enumerate(train_data):
+            
+            print(X_train.shape)
             # update discriminator
             output = model(X_train, training=False)
             with tf.GradientTape() as tape:
