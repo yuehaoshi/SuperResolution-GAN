@@ -20,7 +20,7 @@ class Discriminator(layers.Layer):
         self.dense1 = layers.Dense(512, activation=layers.LeakyReLU(alpha=0.18))
         self.dense2 = layers.Dense(1)
     
-    def forward(self,x):
+    def call(self,x):
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.bn1(x)

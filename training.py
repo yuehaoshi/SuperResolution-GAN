@@ -12,6 +12,8 @@ from tqdm import tqdm
 def discriminator_loss(fake: Tensor, real: Tensor, discriminator: Model):
     fake = discriminator(fake)
     real = discriminator(real)
+    print(fake.shape)
+    print(real.shape)
     loss = losses.binary_crossentropy(tf.zeros_like(
         fake), fake) + losses.binary_crossentropy(tf.ones_like(real), real)
     return loss
