@@ -3,7 +3,7 @@ from models.Discriminator import Discriminator
 import config
 from models.SRResnet import SRResnet
 from tensorflow import losses, Tensor, keras
-from tensorflow.keras import Model
+from tensorflow.keras import Model, layers
 from Dataloader import DIV2KDataset
 from tqdm import tqdm
 
