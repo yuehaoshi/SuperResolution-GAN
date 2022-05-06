@@ -38,8 +38,7 @@ def train_mse():
                         weights='imagenet',
                         input_tensor=None,
                         input_shape=None,
-                        pooling='avg',
-                        **kwargs
+                        pooling='avg'
                     )
     dataset = DIV2KDataset(config.DIV2K_PATH, 'train')
     train_data = tf.data.Dataset.from_generator(

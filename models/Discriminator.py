@@ -1,7 +1,8 @@
-from tensorflow.keras import layers, activations
+from tensorflow.keras import layers, activations, Model
+from tensorflow.keras.applications import ResNet50
+from tensorflow import Tensor
 
-
-class Discriminator(layers.Layer):
+class Discriminator_old(layers.Layer):
     def __init__(self) -> None:
         super().__init__()
         self.prelu = layers.PReLU()
@@ -39,3 +40,21 @@ class Discriminator(layers.Layer):
         x = activations.sigmoid(x)
         return x, result
 
+class Discriminator(Model):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.inner:Model = ResNet50(include_top=False, weights="imagenet")
+
+    def call(self, x:Tensor):
+        self.inner.input = x
+        
+
+
+
+
+def test():
+    dis = Discriminator()
+
+
+if __name__ == "__main__":
+    test()
