@@ -31,7 +31,7 @@ def train_mse():
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
     optimizer_D = tf.optimizers.Adam(
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
-    model = SRResnet(B=16)
+    model = SRResnet(B=8)
 #     discriminator = Discriminator()
     reference_model = keras.applications.resnet50.ResNet50(
                         include_top=False,
@@ -48,14 +48,15 @@ def train_mse():
         dataset.pair_generator,
         output_signature=(tf.TensorSpec((None, None, 3)), tf.TensorSpec((None, None, 3))))
     # train_data = train_data.batch(config.BATCH_SIZE) # cannot batch because of different image size
-    train_data = train_data.shuffle(32)
+    # train_data = train_data.shuffle(4)
     for ep in tqdm(range(config.EPOCHS)):
 
         for step, (X_train, y_train) in train_data.enumerate():
             # batch size of 1
             X_train:Tensor = tf.expand_dims(X_train, 0)
             y_train:Tensor = tf.expand_dims(y_train, 0)
-
+            print(X_train.shape)
+            print(y_train.shape)
             # update discriminator
             output = model(X_train, training=False)
             with tf.GradientTape() as tape:
@@ -64,14 +65,22 @@ def train_mse():
             optimizer_D.apply_gradients(
                 zip(grads, discriminator.trainable_weights))
 
-            # update SRResnet (generator)
-            with tf.GradientTape() as tape:
-                output = model(X_train, training=True)
-                loss = losses.mse(
-                    output, y_train) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
-            grads = tape.gradient(loss, model.trainable_weights)
-            optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
+            # # update SRResnet (generator)
+            # with tf.GradientTape() as tape:
+            #     output = model(X_train, training=True)
+            #     loss = losses.mse(
+            #         output, y_train) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
+            # grads = tape.gradient(loss, model.trainable_weights)
+            # optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
 
 
+            d = discriminator(X_train)
 if __name__ == "__main__":
+    physical_devices = tf.config.list_physical_devices('GPU')
+    try:
+        tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    except:
+    # Invalid device or cannot modify virtual devices once initialized.
+        pass
+
     train_mse()

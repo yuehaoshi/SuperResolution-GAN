@@ -69,11 +69,18 @@ class SRResnet(Model):
 
 
 def test():
-    imsize = (4, 100, 100, 3)
+    physical_devices = tf.config.list_physical_devices('GPU')
+    try:
+        tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    except:
+    # Invalid device or cannot modify virtual devices once initialized.
+        pass
+    imsize = (1, 2000, 2000, 3)
     tf.random.set_seed(0)
     x = tf.random.uniform(imsize)
-    sr = SRResnet()
-    y:Tensor = sr(x)
+    with tf.device("gpu"):
+        sr = SRResnet()
+        y:Tensor = sr(x)
     # print(y)
 
     logging.basicConfig(filename='SRResnet.log', encoding='utf-8', level=logging.DEBUG, filemode='a+')
