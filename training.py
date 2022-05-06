@@ -65,13 +65,13 @@ def train_mse():
             optimizer_D.apply_gradients(
                 zip(grads, discriminator.trainable_weights))
 
-            # # update SRResnet (generator)
-            # with tf.GradientTape() as tape:
-            #     output = model(X_train, training=True)
-            #     loss = losses.mse(
-            #         output, y_train) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
-            # grads = tape.gradient(loss, model.trainable_weights)
-            # optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
+            # update SRResnet (generator)
+            with tf.GradientTape() as tape:
+                output = model(X_train, training=True)
+                loss = losses.mse(
+                    output, y_train) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
+            grads = tape.gradient(loss, model.trainable_weights)
+            optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
 
 
             d = discriminator(X_train)

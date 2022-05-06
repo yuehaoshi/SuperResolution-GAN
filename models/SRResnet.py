@@ -13,12 +13,12 @@ class ResBlock(layers.Layer):
         self.conv2 = layers.Conv2D(64, 3, padding='same')
         self.bn1 = layers.BatchNormalization()
         self.bn2 = layers.BatchNormalization()
-        self.prelu = layers.PReLU()
+        # self.prelu = layers.PReLU()
 
     def call(self, x: Tensor) -> Tensor:
         y = self.conv1(x)
         y = self.bn1(y)
-        y = self.prelu(y)
+        y = activations.relu(y)
         y = self.conv2(y)
         y = self.bn2(y)
         return x + y
@@ -29,12 +29,12 @@ class SubPixConv2D(layers.Layer):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.scale = scale
         self.conv1 = layers.Conv2D(64*scale*2, 3)
-        self.prelu = layers.PReLU()
+        # self.prelu = layers.PReLU()
 
     def call(self, x: Tensor):
         y = self.conv1(x)
         y = tf.nn.depth_to_space(y, self.scale)
-        y = self.prelu(y)
+        y = activations.relu(y)
         return y
 
 
@@ -48,14 +48,14 @@ class SRResnet(Model):
         self.conv1 = layers.Conv2D(64, 3, padding='same')
         self.conv2 = layers.Conv2D(64, 3, padding='same')
         self.conv_compress = layers.Conv2D(3, 1)
-        self.prelu = layers.PReLU()
+        # self.prelu = layers.PReLU()
         self.bn = layers.BatchNormalization()
         for i in range(B):
             self.blocks.append(ResBlock())
 
     def call(self, x: Tensor) -> Tensor:
         y = self.conv1(x)
-        y = self.prelu(y)
+        y = activations.relu(y)
         x = tf.identity(y)
         for i in range(self.B):
             y = self.blocks[i](y)
@@ -75,16 +75,18 @@ def test():
     except:
     # Invalid device or cannot modify virtual devices once initialized.
         pass
-    imsize = (1, 2000, 2000, 3)
+    imsize = (1, 500, 500, 3)
     tf.random.set_seed(0)
     x = tf.random.uniform(imsize)
-    with tf.device("gpu"):
-        sr = SRResnet()
-        y:Tensor = sr(x)
+    sr = SRResnet()
+
+    sr.build(imsize)
+    sr.summary()
+    # y:Tensor = sr(x)
     # print(y)
 
-    logging.basicConfig(filename='SRResnet.log', encoding='utf-8', level=logging.DEBUG, filemode='a+')
-    logging.info(str(y))
+    # logging.basicConfig(filename='SRResnet.log', encoding='utf-8', level=logging.DEBUG, filemode='a+')
+    # logging.info(str(y))
 
 
 if __name__ == "__main__":
