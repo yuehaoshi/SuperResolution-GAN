@@ -2,7 +2,7 @@ import tensorflow as tf
 from models.Discriminator import Discriminator
 import config
 from models.SRResnet import SRResnet
-from tensorflow import losses, Tensor
+from tensorflow import losses, Tensor, keras
 from tensorflow.keras import Model
 from Dataloader import DIV2KDataset
 from tqdm import tqdm
@@ -32,7 +32,15 @@ def train_mse():
     optimizer_D = tf.optimizers.Adam(
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
     model = SRResnet(B=16)
-    discriminator = Discriminator()
+#     discriminator = Discriminator()
+    discriminator = keras.applications.resnet50.ResNet50(
+                        include_top=False,
+                        weights='imagenet',
+                        input_tensor=None,
+                        input_shape=None,
+                        pooling='avg',
+                        **kwargs
+                    )
     dataset = DIV2KDataset(config.DIV2K_PATH, 'train')
     train_data = tf.data.Dataset.from_generator(
         dataset.pair_generator,
