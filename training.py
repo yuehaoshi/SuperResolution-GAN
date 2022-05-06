@@ -6,49 +6,52 @@ from tensorflow import losses, Tensor, keras
 from tensorflow.keras import Model, layers
 from Dataloader import DIV2KDataset
 from tqdm import tqdm
+import datetime
 
 
-@tf.function
+
 def discriminator_loss(fake: Tensor, real: Tensor, discriminator: Model):
     fake = discriminator(fake)
     real = discriminator(real)
-    print(fake.shape)
-    print(real.shape)
+    # print(fake.shape)
+    # print(real.shape)
     loss = losses.binary_crossentropy(tf.zeros_like(
         fake), fake) + losses.binary_crossentropy(tf.ones_like(real), real)
     return loss
 
 
-@tf.function
+
 def generator_loss(fake: Tensor, discriminator: Model):
-    pred = discriminator(fake)
+    pred = discriminator(fake, training=False)
     loss = losses.binary_crossentropy(tf.ones_like(pred), pred)
     return loss
 
 
 def train_mse():
+
+    current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
+    test_log_dir = 'logs/gradient_tape/' + current_time + '/test'
+    train_summary_writer = tf.summary.create_file_writer(train_log_dir)
+    test_summary_writer = tf.summary.create_file_writer(test_log_dir)
+
+
+
+
+    # setup optimizers
     optimizer_SR = tf.optimizers.Adam(
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
     optimizer_D = tf.optimizers.Adam(
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
-    model = SRResnet(B=8)
-#     discriminator = Discriminator()
-    reference_model = keras.applications.resnet50.ResNet50(
-                        include_top=False,
-                        weights='imagenet',
-                        input_tensor=None,
-                        input_shape=None,
-                        pooling='avg'
-                    )
-    result = reference_model.output
-    result = layers.Dense(1)(result)
-    discriminator = Model(inputs=reference_model.input, outputs=result)
+    model = SRResnet(B=16)
+    discriminator = Discriminator()
+    
     dataset = DIV2KDataset(config.DIV2K_PATH, 'train')
     train_data = tf.data.Dataset.from_generator(
         dataset.pair_generator,
         output_signature=(tf.TensorSpec((None, None, 3)), tf.TensorSpec((None, None, 3))))
     # train_data = train_data.batch(config.BATCH_SIZE) # cannot batch because of different image size
-    # train_data = train_data.shuffle(4)
+    train_data = train_data.shuffle(2)
     for ep in tqdm(range(config.EPOCHS)):
 
         for step, (X_train, y_train) in train_data.enumerate():
@@ -58,7 +61,9 @@ def train_mse():
             print(X_train.shape)
             print(y_train.shape)
             # update discriminator
+            
             output = model(X_train, training=False)
+            # print(output.shape)
             with tf.GradientTape() as tape:
                 loss = discriminator_loss(output, y_train, discriminator)
             grads = tape.gradient(loss, discriminator.trainable_weights)
@@ -72,9 +77,10 @@ def train_mse():
                     output, y_train) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
             grads = tape.gradient(loss, model.trainable_weights)
             optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
+            print(loss.shape)
+            tf.summary.image('gen image', output, step=step)
 
 
-            d = discriminator(X_train)
 if __name__ == "__main__":
     physical_devices = tf.config.list_physical_devices('GPU')
     try:

@@ -40,16 +40,18 @@ class Discriminator_old(layers.Layer):
         x = activations.sigmoid(x)
         return x, result
 
-class Discriminator(Model):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.inner:Model = ResNet50(include_top=False, weights="imagenet")
+def Discriminator() -> Model:
 
-    def call(self, x:Tensor):
-        self.inner.input = x
-        
-
-
+    __reference_model = ResNet50(
+                            include_top=False,
+                            weights='imagenet',
+                            input_tensor=None,
+                            input_shape=None,
+                            pooling='avg'
+                        )
+    __result = __reference_model.output
+    __result = layers.Dense(1)(__result)
+    return Model(inputs=__reference_model.input, outputs=__result)
 
 
 def test():

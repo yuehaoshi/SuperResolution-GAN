@@ -4,6 +4,7 @@ from tensorflow import Module, Variable, Tensor
 from tensorflow.keras import layers, activations, Model
 import logging
 import tensorflow as tf
+import time
 
 
 class ResBlock(layers.Layer):
@@ -28,7 +29,7 @@ class SubPixConv2D(layers.Layer):
     def __init__(self, scale: int = 2, trainable=True, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.scale = scale
-        self.conv1 = layers.Conv2D(64*scale*2, 3)
+        self.conv1 = layers.Conv2D(64*scale*2, 3, padding="same")
         # self.prelu = layers.PReLU()
 
     def call(self, x: Tensor):
@@ -54,6 +55,7 @@ class SRResnet(Model):
             self.blocks.append(ResBlock())
 
     def call(self, x: Tensor) -> Tensor:
+        
         y = self.conv1(x)
         y = activations.relu(y)
         x = tf.identity(y)
@@ -78,13 +80,18 @@ def test():
     imsize = (1, 500, 500, 3)
     tf.random.set_seed(0)
     x = tf.random.uniform(imsize)
-    sr = SRResnet()
+    sr = SRResnet(16)
 
     sr.build(imsize)
     sr.summary()
-    # y:Tensor = sr(x)
-    # print(y)
+    with tf.GradientTape() as tape:
+        y:Tensor = sr(x)
 
+    grads = tape.gradient(y, sr.trainable_weights)
+    # print(grads)
+    print(y.shape)
+
+    time.sleep(10)
     # logging.basicConfig(filename='SRResnet.log', encoding='utf-8', level=logging.DEBUG, filemode='a+')
     # logging.info(str(y))
 

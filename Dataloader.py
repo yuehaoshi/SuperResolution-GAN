@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from PIL import Image
-from tensorflow import convert_to_tensor, Tensor
+from tensorflow import convert_to_tensor, Tensor, image
 
 # adapted from https://github.com/krasserm/super-resolution/blob/master/data.py
 
@@ -38,6 +38,8 @@ class DIV2KDataset:
 
             hr_img = self._image(hr_path)
             lr_img = self._image(lr_path)
+            hr_img = image.resize(hr_img, [1200, 1200], antialias=True)
+            lr_img = image.resize(lr_img, [300, 300], antialias=True)
 
             yield lr_img, hr_img
 
