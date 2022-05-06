@@ -33,13 +33,16 @@ def train_mse():
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
     model = SRResnet(B=16)
 #     discriminator = Discriminator()
-    discriminator = keras.applications.resnet50.ResNet50(
+    reference_model = keras.applications.resnet50.ResNet50(
                         include_top=False,
                         weights='imagenet',
                         input_tensor=None,
                         input_shape=None,
                         pooling='avg'
                     )
+    result = reference_model.output
+    result = layers.Dense(1)(result)
+    discriminator = Model(inputs=reference_model.input, outputs=result)
     dataset = DIV2KDataset(config.DIV2K_PATH, 'train')
     train_data = tf.data.Dataset.from_generator(
         dataset.pair_generator,
