@@ -76,14 +76,8 @@ def make_layers(config, batch_norm=False, end_with='outputs'):
     return keras.Sequential(layer_list)
 
 
-def vgg19(pretrained=False, end_with='outputs', mode='dynamic', name=None):
-
-    if mode == 'dynamic':
-        model = VGG19(batch_norm=False, end_with=end_with, name=name)
-    elif mode == 'static':
-        raise NotImplementedError
-    else:
-        raise Exception("No such mode %s" % mode)
+def vgg19(end_with='outputs', name=None):
+    model = VGG19(batch_norm=False, end_with=end_with, name=name)
     return model
 
 VGG19 = vgg19
