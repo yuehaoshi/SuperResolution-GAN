@@ -58,8 +58,8 @@ def train_mse():
             # batch size of 1
             X_train:Tensor = tf.expand_dims(X_train, 0)
             y_train:Tensor = tf.expand_dims(y_train, 0)
-            print(X_train.shape)
-            print(y_train.shape)
+            # print(X_train.shape)
+            # print(y_train.shape)
             # update discriminator
             
             output = model(X_train, training=False)
@@ -73,11 +73,10 @@ def train_mse():
             # update SRResnet (generator)
             with tf.GradientTape() as tape:
                 output = model(X_train, training=True)
-                loss = losses.mse(
-                    output, y_train) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
+                loss = tf.reduce_mean(losses.mse(
+                    output, y_train)) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
             grads = tape.gradient(loss, model.trainable_weights)
             optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
-            print(loss.shape)
             tf.summary.image('gen image', output, step=step)
 
 
