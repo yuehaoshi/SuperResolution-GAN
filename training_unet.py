@@ -1,7 +1,7 @@
 import tensorflow as tf
 from models.Discriminator import Discriminator
 import config
-from models.SRResnet import SRResnet
+from models.SRUnet import SRUnet
 from tensorflow import losses, Tensor, keras
 from tensorflow.keras import Model, layers
 from Dataloader import DIV2KDataset
@@ -43,7 +43,7 @@ def train_mse():
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
     optimizer_D = tf.optimizers.Adam(
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
-    model = SRResnet(B=16)
+    model = SRUnet()
     discriminator = Discriminator()
     
     dataset = DIV2KDataset(config.DIV2K_PATH, 'train')
@@ -57,6 +57,8 @@ def train_mse():
         en = train_data.enumerate()
         for step, (X_train, y_train) in en:
             # batch size of 1
+            y_train = tf.image.resize_with_pad(y_train, 1312, 1312, antialias=True)
+            X_train = tf.image.resize_with_pad(X_train, 328, 328, antialias=True)
             X_train:Tensor = tf.expand_dims(X_train, 0)
             y_train:Tensor = tf.expand_dims(y_train, 0)
             # print(X_train.shape)
@@ -79,10 +81,10 @@ def train_mse():
             grads = tape.gradient(loss, model.trainable_weights)
             optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
             # tf.summary.image('gen image', output, step=step)
-            prog.set_postfix({"step":step})
+            prog.set_postfix({"step":int(step)})
         if ep % 10 == 9:
-            model.save(f"checkpoints/model-ep{ep}.pth")
-            discriminator.save(f"checkpoints/resnet-ep{ep}.pth")
+            model.save(f"checkpoints/unet-ep{ep}")
+            discriminator.save(f"checkpoints/resnet-ep{ep}")
 
 
 if __name__ == "__main__":

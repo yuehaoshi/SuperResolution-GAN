@@ -123,7 +123,6 @@ class SRUnet(Model):
         y = self.b4_3(y)
         y4 = self.b4_4(y)
 
-        print(y4.shape)
         y = self.up1(y4, y3)
         y = self.up2(y, y2)
         y = self.up3(y, y1)

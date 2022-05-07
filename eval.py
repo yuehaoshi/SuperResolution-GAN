@@ -25,21 +25,17 @@ train_data = tf.data.Dataset.from_generator(
 train_data = train_data.shuffle(2)
 plt.figure()
 prog = tqdm(range(config.EPOCHS))
-for ep in prog:
-    en = train_data.enumerate()
-    for step, (X_train, y_train) in en:
+en = train_data.enumerate()
+for step, (X_train, y_train) in en:
 
 
     #     # batch size of 1
-        X_train:Tensor = tf.expand_dims(X_train, 0)
-        y_train:Tensor = tf.expand_dims(y_train, 0)
-        # print(X_train.shape)
-        # print(y_train.shape)
-        # update discriminator
+    X_train:Tensor = tf.expand_dims(X_train, 0)
         
-        output = model(X_train, training=False)
-        plt.imsave("sdfsf.png", X_train.numpy())
-        prog.set_postfix({"step":step})
+    output = model(X_train, training=False)
+    output = tf.clip_by_value(output[0]/255, 0, 1)
+    plt.imsave(f"outputs/{step}.png", output.numpy())
+    prog.set_postfix({"step":step})
    
 
 
