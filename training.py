@@ -52,9 +52,10 @@ def train_mse():
         output_signature=(tf.TensorSpec((None, None, 3)), tf.TensorSpec((None, None, 3))))
     # train_data = train_data.batch(config.BATCH_SIZE) # cannot batch because of different image size
     train_data = train_data.shuffle(2)
-    for ep in tqdm(range(config.EPOCHS)):
-
-        for step, (X_train, y_train) in train_data.enumerate():
+    prog = tqdm(range(config.EPOCHS))
+    for ep in prog:
+        en = train_data.enumerate()
+        for step, (X_train, y_train) in en:
             # batch size of 1
             X_train:Tensor = tf.expand_dims(X_train, 0)
             y_train:Tensor = tf.expand_dims(y_train, 0)
@@ -77,7 +78,11 @@ def train_mse():
                     output, y_train)) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
             grads = tape.gradient(loss, model.trainable_weights)
             optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
-            tf.summary.image('gen image', output, step=step)
+            # tf.summary.image('gen image', output, step=step)
+            prog.set_postfix({"step":step, "total":len(en)})
+        if ep > 0 and ep % 40 == 0:
+            model.save(f"checkpoints/model-ep{ep}.pth")
+            discriminator.save(f"checkpoints/resnet-ep{ep}.pth")
 
 
 if __name__ == "__main__":

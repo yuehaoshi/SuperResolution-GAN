@@ -38,8 +38,8 @@ class DIV2KDataset:
 
             hr_img = self._image(hr_path)
             lr_img = self._image(lr_path)
-            hr_img.thumbnail((1200, 1200))
-            lr_img.thumbnail((300, 300))
+            hr_img = hr_img.thumbnail((1200, 1200))
+            lr_img = lr_img.thumbnail((300, 300))
             #hr_img = image.resize(hr_img, [1200, 1200], antialias=True)
             #lr_img = image.resize(lr_img, [300, 300], antialias=True)
 
