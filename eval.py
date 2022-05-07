@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow import Tensor
 from Dataloader import DIV2KDataset
 import config
-import tqdm
+from tqdm import tqdm
 from models.SRResnet import SRResnet
 
 
