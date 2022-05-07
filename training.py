@@ -79,7 +79,7 @@ def train_mse():
             grads = tape.gradient(loss, model.trainable_weights)
             optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
             # tf.summary.image('gen image', output, step=step)
-            prog.set_postfix({"step":step, "total":len(en)})
+            prog.set_postfix({"step":step})
         if ep > 0 and ep % 40 == 0:
             model.save(f"checkpoints/model-ep{ep}.pth")
             discriminator.save(f"checkpoints/resnet-ep{ep}.pth")
