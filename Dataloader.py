@@ -2,6 +2,7 @@ import os
 import numpy as np
 from PIL import Image
 from tensorflow import convert_to_tensor, Tensor, image
+import tensorflow as tf
 
 # adapted from https://github.com/krasserm/super-resolution/blob/master/data.py
 
@@ -56,7 +57,7 @@ class DIV2KDataset:
                 f'X{self.scale}', f'{id:04}x{self.scale}.png')
 
             hr_img = self._image(hr_path)
-            for p in self.patches:
+            for p in range(self.patches):
                 hr_img = image.random_crop(hr_img, (640, 640, 3))
                 lr_img = image.resize(hr_img, (160, 160), antialias=True)
                 yield lr_img, hr_img
@@ -69,4 +70,4 @@ class DIV2KDataset:
                 img = img.convert('RGB')
             if self.cache_images:
                 self.cache[path] = img
-        return convert_to_tensor(img)
+        return convert_to_tensor(img, dtype=tf.float32)

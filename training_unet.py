@@ -30,16 +30,16 @@ def generator_loss(fake: Tensor, discriminator: Model):
 def train_mse(load_model=False):
 
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
-    test_log_dir = 'logs/gradient_tape/' + current_time + '/test'
+    train_log_dir = 'logs/unet' + current_time + '/train'
+    test_log_dir = 'logs/unet' + current_time + '/test'
     train_summary_writer = tf.summary.create_file_writer(train_log_dir)
     test_summary_writer = tf.summary.create_file_writer(test_log_dir)
 
     # setup optimizers
     optimizer_SR = tf.optimizers.Adam(
-        learning_rate=1e-3, beta_1=0.9)
+        learning_rate=1e-5, beta_1=0.9)
     optimizer_D = tf.optimizers.Adam(
-        learning_rate=1e-3, beta_1=0.9)
+        learning_rate=1e-4, beta_1=0.9)
 
     model = SRUnet()
     discriminator = Discriminator()
@@ -56,7 +56,7 @@ def train_mse(load_model=False):
         output_signature=(tf.TensorSpec((None, None, 3)), tf.TensorSpec((None, None, 3))))
     # train_data = train_data.batch(config.BATCH_SIZE) # cannot batch because of different image size
     train_data = train_data.shuffle(32)
-    train_data = train_data.batch(8)
+    train_data = train_data.batch(4)
     prog = tqdm(range(config.EPOCHS))
     for ep in prog:
         en = train_data.enumerate()
@@ -71,6 +71,8 @@ def train_mse(load_model=False):
             # print(X_train.shape)
             # print(y_train.shape)
             # update discriminator
+            X_train = X_train / 255.
+            y_train = y_train / 255.
 
             output = model(X_train, training=False)
             # print(output.shape)
@@ -86,19 +88,20 @@ def train_mse(load_model=False):
                 # MSE loss
                 loss = tf.reduce_mean(losses.mse(
                     output, y_train)) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
-
                 # perceptual loss
                 # loss = tf.reduce_mean(losses.mse(
                 #     vgg(output), vgg(y_train))) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
 
             grads = tape.gradient(loss, model.trainable_weights)
             optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
-        
-            tf.summary.image('gen image', output, step=step)
-            prog.set_postfix({"step": int(step), "loss": int(loss)})
+            if int(step) % 100 == 0:
+                with train_summary_writer.as_default():
+                    tf.summary.scalar("loss", float(tf.reduce_mean(loss)), step=ep*800 + int(step))
+                    tf.summary.image('gen image', output, step=ep*800 + int(step))
+            prog.set_postfix({"step": int(step), "loss": float(tf.reduce_mean(loss))})
         if ep % 10 == 9:
-            model.save(f"checkpoints/unet-ep{ep}")
-            discriminator.save(f"checkpoints/resnet-ep{ep}")
+            model.save_weights(f"checkpoints/unet-ep{ep}")
+            discriminator.save_weights(f"checkpoints/resnet-ep{ep}")
 
 
 if __name__ == "__main__":
