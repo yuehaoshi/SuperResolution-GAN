@@ -7,7 +7,7 @@ from tensorflow import convert_to_tensor, Tensor, image
 
 
 class DIV2KDataset:
-    def __init__(self, path, subset='train', downgrade="bicubic", scale=4,
+    def __init__(self, path, subset='train', downgrade="bicubic", scale=4, patches=8,
                  repeat=True, image_ids=None, cache_images=True):
         self.path = path
         self.subset = subset
@@ -15,6 +15,7 @@ class DIV2KDataset:
         self.cache = {}
         self.downgrade = downgrade
         self.scale = scale
+        self.patches = patches
 
         if image_ids is None:
             if subset == 'train':
@@ -44,6 +45,21 @@ class DIV2KDataset:
             #lr_img = image.resize(lr_img, [300, 300], antialias=True)
 
             yield lr_img, hr_img
+
+    def patch_generator(self):
+
+        for id in self.image_ids:
+            hr_path = os.path.join(
+                self.path, f'DIV2K_{self.subset}_HR', f'{id:04}.png')
+            lr_path = os.path.join(
+                self.path, f'DIV2K_{self.subset}_LR_{self.downgrade}',
+                f'X{self.scale}', f'{id:04}x{self.scale}.png')
+
+            hr_img = self._image(hr_path)
+            for p in self.patches:
+                hr_img = image.random_crop(hr_img, (640, 640, 3))
+                lr_img = image.resize(hr_img, (160, 160), antialias=True)
+                yield lr_img, hr_img
 
     def _image(self, path) -> Tensor:
         img = self.cache.get(path)
