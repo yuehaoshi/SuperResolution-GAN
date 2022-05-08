@@ -88,7 +88,7 @@ def train_mse():
             grads = tape.gradient(loss, model.trainable_weights)
             optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
             # tf.summary.image('gen image', output, step=step)
-            prog.set_postfix({"step":step})
+            prog.set_postfix({"step":int(step)})
         if ep % 10 == 9:
             model.save(f"checkpoints/model_vgg-ep{ep}")
             discriminator.save(f"checkpoints/resnet_vgg_r-ep{ep}")
