@@ -4,6 +4,7 @@ import config
 from models.SRUnet import SRUnet
 from tensorflow import losses, Tensor, keras
 from tensorflow.keras import Model, layers
+from tensorflow.keras.applications import resnet50
 from Dataloader import DIV2KDataset
 from tqdm import tqdm
 import datetime
@@ -11,8 +12,8 @@ from models.vgg import VGG
 
 
 def discriminator_loss(fake: Tensor, real: Tensor, discriminator: Model):
-    fake = discriminator(fake)
-    real = discriminator(real)
+    fake = discriminator(resnet50.preprocess_input(fake))
+    real = discriminator(resnet50.preprocess_input(real))
     # print(fake.shape)
     # print(real.shape)
     loss = losses.binary_crossentropy(tf.zeros_like(
@@ -21,12 +22,12 @@ def discriminator_loss(fake: Tensor, real: Tensor, discriminator: Model):
 
 
 def generator_loss(fake: Tensor, discriminator: Model):
-    pred = discriminator(fake, training=False)
+    pred = discriminator(resnet50.preprocess_input(fake), training=False)
     loss = losses.binary_crossentropy(tf.ones_like(pred), pred)
     return loss
 
 
-def train_mse():
+def train_mse(load_model=False):
 
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
@@ -39,9 +40,15 @@ def train_mse():
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
     optimizer_D = tf.optimizers.Adam(
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
-    model = SRUnet()
-    discriminator = Discriminator()
-    vgg = VGG()
+
+    if load_model:
+        model = tf.keras.models.load_model("checkpoints/unet-ep19/")
+        discriminator = tf.keras.models.load_model("checkpoints/resnet-ep19")
+    else:
+
+        model = SRUnet()
+        discriminator = Discriminator()
+    # vgg = VGG()
 
     dataset = DIV2KDataset(config.DIV2K_PATH, 'train')
     train_data = tf.data.Dataset.from_generator(
@@ -76,20 +83,20 @@ def train_mse():
             with tf.GradientTape() as tape:
                 output = model(X_train, training=True)
                 # MSE loss
-                # loss = tf.reduce_mean(losses.mse(
-                #     output, y_train)) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
+                loss = tf.reduce_mean(losses.mse(
+                    output, y_train)) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
 
                 # perceptual loss
-                loss = tf.reduce_mean(losses.mse(
-                    vgg(output), vgg(y_train))) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
+                # loss = tf.reduce_mean(losses.mse(
+                #     vgg(output), vgg(y_train))) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
 
             grads = tape.gradient(loss, model.trainable_weights)
             optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
             # tf.summary.image('gen image', output, step=step)
-            prog.set_postfix({"step": int(step)})
+            prog.set_postfix({"step": int(step), "loss": int(loss)})
         if ep % 10 == 9:
-            model.save(f"checkpoints/unet_vgg-ep{ep}")
-            discriminator.save(f"checkpoints/resnet_vgg-ep{ep}")
+            model.save(f"checkpoints/unet-ep{ep}")
+            discriminator.save(f"checkpoints/resnet-ep{ep}")
 
 
 if __name__ == "__main__":
@@ -100,4 +107,4 @@ if __name__ == "__main__":
     # Invalid device or cannot modify virtual devices once initialized.
         pass
 
-    train_mse()
+    train_mse(False)

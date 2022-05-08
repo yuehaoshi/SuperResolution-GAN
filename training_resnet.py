@@ -4,6 +4,7 @@ import config
 from models.SRResnet import SRResnet
 from tensorflow import losses, Tensor, keras
 from tensorflow.keras import Model, layers
+from tensorflow.keras.applications import resnet50
 from Dataloader import DIV2KDataset
 from tqdm import tqdm
 import datetime
@@ -12,8 +13,8 @@ from models.vgg import VGG
 
 
 def discriminator_loss(fake: Tensor, real: Tensor, discriminator: Model):
-    fake = discriminator(fake)
-    real = discriminator(real)
+    fake = discriminator(resnet50.preprocess_input(fake))
+    real = discriminator(resnet50.preprocess_input(real))
     # print(fake.shape)
     # print(real.shape)
     loss = losses.binary_crossentropy(tf.zeros_like(
@@ -21,12 +22,10 @@ def discriminator_loss(fake: Tensor, real: Tensor, discriminator: Model):
     return loss
 
 
-
 def generator_loss(fake: Tensor, discriminator: Model):
-    pred = discriminator(fake, training=False)
+    pred = discriminator(resnet50.preprocess_input(fake), training=False)
     loss = losses.binary_crossentropy(tf.ones_like(pred), pred)
     return loss
-
 
 def train_mse():
 
