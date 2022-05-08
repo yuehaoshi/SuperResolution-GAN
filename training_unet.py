@@ -37,7 +37,7 @@ def train_mse(load_model=False):
 
     # setup optimizers
     optimizer_SR = tf.optimizers.Adam(
-        learning_rate=1e-5, beta_1=0.9)
+        learning_rate=1e-4, beta_1=0.9)
     optimizer_D = tf.optimizers.Adam(
         learning_rate=1e-4, beta_1=0.9)
 
@@ -50,7 +50,7 @@ def train_mse(load_model=False):
 
     # vgg = VGG()
 
-    dataset = DIV2KDataset(config.DIV2K_PATH, 'train')
+    dataset = DIV2KDataset(config.DIV2K_PATH, 'train', patches=8)
     train_data = tf.data.Dataset.from_generator(
         dataset.patch_generator,
         output_signature=(tf.TensorSpec((None, None, 3)), tf.TensorSpec((None, None, 3))))
@@ -99,9 +99,9 @@ def train_mse(load_model=False):
                     tf.summary.scalar("loss", float(tf.reduce_mean(loss)), step=ep*800 + int(step))
                     tf.summary.image('gen image', output, step=ep*800 + int(step))
             prog.set_postfix({"step": int(step), "loss": float(tf.reduce_mean(loss))})
-        if ep % 10 == 9:
-            model.save_weights(f"checkpoints/unet-ep{ep}")
-            discriminator.save_weights(f"checkpoints/resnet-ep{ep}")
+        
+        model.save_weights(f"checkpoints/unet-ep{ep}/")
+        discriminator.save_weights(f"checkpoints/resnet-ep{ep}/")
 
 
 if __name__ == "__main__":
