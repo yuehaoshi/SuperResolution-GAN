@@ -7,7 +7,7 @@ from tensorflow.keras import Model, layers
 from Dataloader import DIV2KDataset
 from tqdm import tqdm
 import datetime
-
+from models.vgg import VGG
 
 
 def discriminator_loss(fake: Tensor, real: Tensor, discriminator: Model):
@@ -18,7 +18,6 @@ def discriminator_loss(fake: Tensor, real: Tensor, discriminator: Model):
     loss = losses.binary_crossentropy(tf.zeros_like(
         fake), fake) + losses.binary_crossentropy(tf.ones_like(real), real)
     return loss
-
 
 
 def generator_loss(fake: Tensor, discriminator: Model):
@@ -35,9 +34,6 @@ def train_mse():
     train_summary_writer = tf.summary.create_file_writer(train_log_dir)
     test_summary_writer = tf.summary.create_file_writer(test_log_dir)
 
-
-
-
     # setup optimizers
     optimizer_SR = tf.optimizers.Adam(
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
@@ -45,7 +41,8 @@ def train_mse():
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
     model = SRUnet()
     discriminator = Discriminator()
-    
+    vgg = VGG()
+
     dataset = DIV2KDataset(config.DIV2K_PATH, 'train')
     train_data = tf.data.Dataset.from_generator(
         dataset.pair_generator,
@@ -57,14 +54,16 @@ def train_mse():
         en = train_data.enumerate()
         for step, (X_train, y_train) in en:
             # batch size of 1
-            y_train = tf.image.resize_with_pad(y_train, 1312, 1312, antialias=True)
-            X_train = tf.image.resize_with_pad(X_train, 328, 328, antialias=True)
-            X_train:Tensor = tf.expand_dims(X_train, 0)
-            y_train:Tensor = tf.expand_dims(y_train, 0)
+            y_train = tf.image.resize_with_pad(
+                y_train, 1312, 1312, antialias=True)
+            X_train = tf.image.resize_with_pad(
+                X_train, 328, 328, antialias=True)
+            X_train: Tensor = tf.expand_dims(X_train, 0)
+            y_train: Tensor = tf.expand_dims(y_train, 0)
             # print(X_train.shape)
             # print(y_train.shape)
             # update discriminator
-            
+
             output = model(X_train, training=False)
             # print(output.shape)
             with tf.GradientTape() as tape:
@@ -76,12 +75,18 @@ def train_mse():
             # update SRResnet (generator)
             with tf.GradientTape() as tape:
                 output = model(X_train, training=True)
+                # MSE loss
+                # loss = tf.reduce_mean(losses.mse(
+                #     output, y_train)) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
+
+                # perceptual loss
                 loss = tf.reduce_mean(losses.mse(
-                    output, y_train)) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
+                    vgg(output), vgg(y_train))) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
+
             grads = tape.gradient(loss, model.trainable_weights)
             optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
             # tf.summary.image('gen image', output, step=step)
-            prog.set_postfix({"step":int(step)})
+            prog.set_postfix({"step": int(step)})
         if ep % 10 == 9:
             model.save(f"checkpoints/unet-ep{ep}")
             discriminator.save(f"checkpoints/resnet-ep{ep}")

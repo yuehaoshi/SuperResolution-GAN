@@ -4,17 +4,9 @@ from tensorflow import Tensor
 from Dataloader import DIV2KDataset
 import config
 from tqdm import tqdm
-from models.SRResnet import SRResnet
-
 
 
 physical_devices = tf.config.list_physical_devices('GPU')
-try:
-    tf.config.experimental.set_memory_growth(physical_devices[0], True)
-except:
-# Invalid device or cannot modify virtual devices once initialized.
-    pass
-
 model = tf.keras.models.load_model("checkpoints/model-ep40.pth/")
 
 dataset = DIV2KDataset(config.DIV2K_PATH, 'train')
