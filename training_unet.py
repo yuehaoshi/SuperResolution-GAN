@@ -88,8 +88,8 @@ def train_mse():
             # tf.summary.image('gen image', output, step=step)
             prog.set_postfix({"step": int(step)})
         if ep % 10 == 9:
-            model.save(f"checkpoints/unet-ep{ep}")
-            discriminator.save(f"checkpoints/resnet-ep{ep}")
+            model.save(f"checkpoints/unet_vgg-ep{ep}")
+            discriminator.save(f"checkpoints/resnet_vgg-ep{ep}")
 
 
 if __name__ == "__main__":
