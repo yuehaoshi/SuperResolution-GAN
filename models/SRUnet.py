@@ -91,10 +91,10 @@ class SRUnet(Model):
         self.sr1 = SubPixConv2D(8)
         self.sr2 = SubPixConv2D(3)
 
-        self.conv0 = layers.Conv2D(64, 3, padding="same", name="sdf")
+        self.conv0 = layers.Conv2D(64, 3, padding="same")
         self.conv1 = layers.Conv2D(128, 3, padding="same")
         self.conv2 = layers.Conv2D(256, 3, padding="same")
-        self.conv3 = layers.Conv2D(512, 3, padding="same", name="las_conv")
+        self.conv3 = layers.Conv2D(512, 3, padding="same")
 
     def call(self, x:Tensor):
         y = self.conv0(x)
@@ -141,7 +141,7 @@ def test():
     except:
     # Invalid device or cannot modify virtual devices once initialized.
         pass
-    imsize = (1, 512, 512, 3)
+    imsize = (1, 328, 328, 3)
     tf.random.set_seed(0)
     x = tf.random.uniform(imsize)
     sr = SRUnet()
