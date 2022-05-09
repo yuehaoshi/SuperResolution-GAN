@@ -9,6 +9,8 @@ $ chmod a+x get_data.sh
 $ ./get_data.sh
 ```
 
+The model checkpoints and some outputs from SRREsnet are [here](https://drive.google.com/drive/folders/1tyo54tMsHTfhxE2aAkm8onYGbe2JfzlK?usp=sharing). For the checkpoints, just unzip the zipfile and place in the root folder.
+
 ### Training:
 ```
 python3 training_*.py
