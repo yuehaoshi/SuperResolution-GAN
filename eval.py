@@ -5,6 +5,7 @@ import config
 from tqdm import tqdm
 from PIL import Image
 import numpy as np
+from models.SRResnet import SRResnet
 
 physical_devices = tf.config.list_physical_devices('GPU')
 
@@ -31,7 +32,10 @@ def eval_srunet():
         img.save(f"outputs/srunet-ep19/{step}.png")
    
 def eval_srresnet():
-    model = tf.keras.models.load_model("checkpoints/resnet_vgg-ep9/")
+    model = SRResnet()
+    model.build((1,3,3,3))
+    model.load_weights("checkpoints/srresnet/")
+    
     en = tqdm(train_data.enumerate())
     for step, (X_train, y_train) in en:
 
@@ -39,11 +43,10 @@ def eval_srresnet():
         # batch size of 1
         H, W, _ = X_train.shape
 
-        X_train = tf.image.resize_with_crop_or_pad(X_train, 300, 300)
         X_train:Tensor = tf.expand_dims(X_train, 0)
         output = model(X_train, training=False)
         output = tf.clip_by_value(output[0], 0, 255).numpy().astype(np.uint8)
         img = Image.fromarray(output)
-        img.save(f"outputs/srresnet-vgg/{step}.png")
+        img.save(f"outputs/srresnet/{step}.png")
 
 eval_srresnet()
