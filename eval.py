@@ -29,7 +29,7 @@ def eval_srunet():
         output = model(X_train, training=False)
         output = tf.clip_by_value(output[0], 0, 255).numpy().astype(np.uint8)
         img = Image.fromarray(output)
-        img.save(f"outputs/srunet-ep19/{step}.png")
+        img.save(f"outputs/srunet/{step}.png")
    
 def eval_srresnet():
     model = SRResnet()
@@ -37,6 +37,10 @@ def eval_srresnet():
     model.load_weights("checkpoints/srresnet/")
     
     en = tqdm(train_data.enumerate())
+    ssim_list = []
+    psnr_list = []
+    ssim = 0
+    psnr = 0
     for step, (X_train, y_train) in en:
 
 
@@ -45,8 +49,16 @@ def eval_srresnet():
 
         X_train:Tensor = tf.expand_dims(X_train, 0)
         output = model(X_train, training=False)
-        output = tf.clip_by_value(output[0], 0, 255).numpy().astype(np.uint8)
-        img = Image.fromarray(output)
-        img.save(f"outputs/srresnet/{step}.png")
+        output = tf.clip_by_value(output[0], 0, 255)
+        s = tf.image.ssim(output, y_train, max_val=255, filter_size=11,
+                          filter_sigma=1.5, k1=0.01, k2=0.03)
+        p = tf.image.psnr(output, y_train, max_val=255)
+        ssim += s
+        psnr += p
+        # print(ssim, psnr)
+        # img = Image.fromarray(output)
+        # img.save(f"outputs/srresnet/{step}.png")
+    # print(ssim_list)
+    # print(psnr_list)
 
 eval_srresnet()

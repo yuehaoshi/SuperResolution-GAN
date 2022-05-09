@@ -45,7 +45,7 @@ def train_mse():
         learning_rate=config.LEARNING_RATE, beta_1=0.9)
     model = SRResnet(B=16)
     discriminator = Discriminator()
-    vgg = VGG()
+    # vgg = VGG()
     
     dataset = DIV2KDataset(config.DIV2K_PATH, 'train')
     train_data = tf.data.Dataset.from_generator(
@@ -78,19 +78,19 @@ def train_mse():
             with tf.GradientTape() as tape:
                 output = model(X_train, training=True)
                 # MSE loss
-                # loss = tf.reduce_mean(losses.mse(
-                #     output, y_train)) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
+                loss = tf.reduce_mean(losses.mse(
+                    output, y_train)) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
 
                 # perceptual loss
-                loss = tf.reduce_mean(losses.mse(
-                    vgg(output), vgg(y_train))) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
+                # loss = tf.reduce_mean(losses.mse(
+                #     vgg(output), vgg(y_train))) + config.DISCRIMINATOR_WEIGHT * generator_loss(output, discriminator)
             grads = tape.gradient(loss, model.trainable_weights)
             optimizer_SR.apply_gradients(zip(grads, model.trainable_weights))
             # tf.summary.image('gen image', output, step=step)
             prog.set_postfix({"step":int(step)})
         if ep % 10 == 9:
-            model.save(f"checkpoints/model_vgg-ep{ep}")
-            discriminator.save(f"checkpoints/resnet_vgg_r-ep{ep}")
+            model.save_weights(f"checkpoints/srresnet-ep{ep}/")
+            discriminator.save_weights(f"checkpoints/resnet-ep{ep}/")
 
 
 if __name__ == "__main__":

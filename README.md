@@ -11,7 +11,7 @@ $ ./get_data.sh
 
 ### Training:
 ```
-python3 training.py
+python3 training_*.py
 ```
 
 ### Inference:
@@ -19,7 +19,14 @@ python3 training.py
 python3 eval.py
 ```
 
+### Dependencies:
+```
+tensorflow:2.8.0
+tqdm
+numpy
+pillow
 
+```
 
 
 
