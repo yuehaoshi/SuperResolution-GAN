@@ -1,5 +1,5 @@
 ## About
-This is the repo for our final project which is an implementation of this [paper](https://arxiv.org/pdf/1609.04802.pdf) in Tensorflow2.
+This project is an implementation of this [paper](https://arxiv.org/pdf/1609.04802.pdf) in Tensorflow2.
 
 ## How to run
 To run the code you first have to download the dataset DIV2K
